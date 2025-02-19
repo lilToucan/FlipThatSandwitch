@@ -8,7 +8,7 @@ public class Node
 
     public Vector2Int Coordinates { get => coordinates; private set => coordinates = value; }
     public Vector3 Position { get => position; private set => position = value; }
-    public Stack<Ingredient> IngridientStack { get; private set; }
+    public IngredientList IngridientStack { get; private set; }
     public bool isBread { get; set; }
 
     public Node(Vector2Int _coordinates, Vector3 _position)

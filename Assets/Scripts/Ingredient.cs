@@ -3,10 +3,12 @@
 public class Ingredient : HomoBehaviour
 {
     // TODO: add grid node variable
-    public Vector2Int Coordinates { get; private set; }
-    public virtual void Flip(Vector2Int coordinates)
+    public Vector2Int Coordinates { get; set; }
+    public virtual void Flip(Node _oldNode,Node _newNode)
     {
-        Coordinates = coordinates;
+        Coordinates = _newNode.Coordinates;
+
+
         
     }
 }
