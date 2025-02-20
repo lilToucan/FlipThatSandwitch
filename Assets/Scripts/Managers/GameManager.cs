@@ -28,7 +28,7 @@ public class GameManager : HomoBehaviour
     private void Awake()
     {
         gameGrid = new(Vector3.zero, ingredientSize);
-        managers = new IManager[] { new InputManager(ExecuteCommand, GetNodeFromCoordinates, ref onValidate), new LevelManager(gameGrid, breadPrefab, ingridientPrefab, ingredientAmountRange, ingredientSize, ref onGetIngridientAmount), new RulesManager(ref onValidate, ref onGetIngridientAmount, winPannel) };
+        managers = new IManager[] { new RulesManager(ref onValidate, ref onGetIngridientAmount, winPannel), new InputManager(ExecuteCommand, GetNodeFromCoordinates, ref onValidate), new LevelManager(gameGrid, breadPrefab, ingridientPrefab, ingredientAmountRange, ingredientSize, ref onGetIngridientAmount) };
         invoker = new();
         LevelGeneration();
     }

@@ -20,7 +20,7 @@ public class InputManager : IManager
 
 
 
-    public InputManager(ExecuteComand _executeCommand, GetNode _getNode,ref ValidateMove _onValidateMove)
+    public InputManager(ExecuteComand _executeCommand, GetNode _getNode, ref ValidateMove _onValidateMove)
     {
         onExecuteCommandRequest += _executeCommand;
         onGetNodeRequest += _getNode;
@@ -109,7 +109,9 @@ public class InputManager : IManager
         Debug.Log(dir);
         Node newNode = onGetNodeRequest?.Invoke(dir);
 
-        if (newNode == null || !onValidateMove.Invoke(oldNode, newNode))
+        if (newNode == null)
+            return;
+        if (!onValidateMove.Invoke(oldNode, newNode))
             return;
 
         FlipStackCommand flip = new(oldNode, newNode, 0.3f);

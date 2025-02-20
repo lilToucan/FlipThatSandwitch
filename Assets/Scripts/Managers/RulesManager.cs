@@ -24,7 +24,7 @@ public class RulesManager : IManager
 
         if (_newNode.isBread && _oldNode.isBread && _newNode.IngridientStack.Count + _oldNode.IngridientStack.Count != ingridientAmount)
             return false;
-        else
+        else if(_newNode.isBread && _oldNode.isBread)
         {
             winPannel.SetActive(true);
         }
