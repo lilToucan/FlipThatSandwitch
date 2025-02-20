@@ -17,4 +17,4 @@ public class Node
         this.position = _position;
         IngridientStack = new();
     }
-}
+} 

@@ -1,17 +1,14 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-public class LevelManager : HomoBehaviour
+public class LevelManager : IManager
 {
-    [SerializeField] private Ingredient breadPrefab;
-    [SerializeField] private Ingredient ingridientPrefab;
+    private Ingredient breadPrefab;
+    private Ingredient ingridientPrefab;
 
-    [SerializeField] private Vector2Int ingredientAmountRange;
+    private Vector2Int ingredientAmountRange;
 
-    [SerializeField] private float ingredientSize = 1.5f;
-
+    private float ingredientSize = 1.5f;
 
     private Vector2Int[] directions = new Vector2Int[4] { new(0, 1), new(0, -1), new(1, 0), new(-1, 0) };
 
@@ -21,18 +18,31 @@ public class LevelManager : HomoBehaviour
     private List<Node> spawnedIngredientNodes = new();
 
     private Grid grid;
+    private Transform transform;
 
+
+    public LevelManager(Grid _grid, Ingredient _breadPrefab, Ingredient _ingridientPrefab, Vector2Int _ingredientAmountRange, float _ingredientSize)
+    {
+        grid = _grid;
+        breadPrefab = _breadPrefab;
+        ingridientPrefab = _ingridientPrefab;
+        ingredientAmountRange = _ingredientAmountRange;
+        ingredientSize = _ingredientSize;
+    }
     public void GenerateLevel()
     {
-        grid = new(transform.position, ingredientSize);
         GenerateBread();
         GenerateIngridients();
     }
 
-    private void Awake()
+    public void AwakeFunction()
     {
         GenerateLevel();
     }
+
+    public void OnEnableFunction() { }
+
+    public void OnDisableFunction() { }
 
     private List<Node> CheckValidAdjacentNodes(Node _node)
     {
@@ -81,7 +91,7 @@ public class LevelManager : HomoBehaviour
 
         // spawn first bread
         lastNode = grid.NodeGrid[x, z];
-        Ingredient lastIngridient = Instantiate(breadPrefab, lastNode.Position, Quaternion.identity);
+        Ingredient lastIngridient = HomoBehaviour.Instantiate(breadPrefab, lastNode.Position, Quaternion.identity);
         lastIngridient.Coordinates = lastNode.Coordinates;
 
         lastNode.isBread = true;
@@ -94,7 +104,7 @@ public class LevelManager : HomoBehaviour
 
         lastNode.isBread = true;
         lastNode = adjacentNodes[Random.Range(0, adjacentNodes.Count)];
-        lastIngridient = Instantiate(breadPrefab, lastNode.Position, Quaternion.identity);
+        lastIngridient = Object.Instantiate(breadPrefab, lastNode.Position, Quaternion.identity);
         lastIngridient.Coordinates = lastNode.Coordinates;
 
         spawnedBreadNodes.Add(lastNode);
@@ -131,7 +141,7 @@ public class LevelManager : HomoBehaviour
             lastNode = adjacentNodes[Random.Range(0, adjacentNodes.Count)];
             spawnedIngredientNodes.Add(lastNode);
 
-            lastIngridient = Instantiate(ingridientPrefab, lastNode.Position, Quaternion.identity);
+            lastIngridient = Object.Instantiate(ingridientPrefab, lastNode.Position, Quaternion.identity);
             lastIngridient.Coordinates = lastNode.Coordinates;
             lastNode.IngridientStack.Push(lastIngridient);
             lastIngridient.name = $"ingridient_{i + 1}";
@@ -143,16 +153,6 @@ public class LevelManager : HomoBehaviour
         return grid.NodeGrid[coordinates.x, coordinates.y];
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        if (grid == null)
-            grid = new(transform.position, ingredientSize);
-        foreach (Node node in grid.NodeGrid)
-        {
-            Gizmos.DrawWireCube(node.Position, Vector3.one);
-        }
-    }
-#endif
+
 
 }

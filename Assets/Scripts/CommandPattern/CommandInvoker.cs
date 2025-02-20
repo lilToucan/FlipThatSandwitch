@@ -7,7 +7,7 @@ public class CommandInvoker
 
     public CommandInvoker()
     {
-
+        commands = new();
     }
 
     public void ExecuteCommand(ICommand command)
