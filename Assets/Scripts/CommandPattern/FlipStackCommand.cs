@@ -19,16 +19,11 @@ public class FlipStackCommand : ICommand
 
     public void Execute()
     {
-        if (oldNode.isBread != newNode.isBread || newNode.IngridientStack.Count == 0)
-            return;
-       
-
         while (oldNode.IngridientStack.Count != 0)
         {
             Vector3 pos = Vector3.zero;
             var ing = oldNode.IngridientStack.Pop();
             undoIngridients.Add(ing, ing.transform.position);
-
 
             pos = newNode.IngridientStack.Peek().transform.position + Vector3.up * ingridientHight;
 

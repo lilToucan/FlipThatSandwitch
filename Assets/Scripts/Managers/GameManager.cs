@@ -3,29 +3,40 @@ using UnityEngine;
 
 public class GameManager : HomoBehaviour
 {
-    [SerializeField] public Ingredient breadPrefab;
-    [SerializeField] public Ingredient ingridientPrefab;
+    [SerializeField] private Ingredient breadPrefab;
+    [SerializeField] private Ingredient ingridientPrefab;
 
-    [SerializeField] public Vector2Int ingredientAmountRange;
+    [SerializeField] private Vector2Int ingredientAmountRange;
 
-    [SerializeField] public float ingredientSize = 1.5f;
-   
+    [SerializeField] private float ingredientSize = 1.5f;
+
+    [SerializeField] private GameObject winPannel;
+
     IManager[] managers;
 
     Grid gameGrid;
     CommandInvoker invoker;
+    int ingridientAmount;
+
+    private ValidateMove onValidate;
+    private Action<int> onGetIngridientAmount;
+
+
+
+    private void ExecuteCommand(ICommand command) => invoker.ExecuteCommand(command);
 
     private void Awake()
     {
         gameGrid = new(Vector3.zero, ingredientSize);
-        managers = new IManager[] { new GameplayManager(ExecuteCommand, GetNodeFromCoordinates), new LevelManager(gameGrid,breadPrefab,ingridientPrefab,ingredientAmountRange,ingredientSize) };
+        managers = new IManager[] { new InputManager(ExecuteCommand, GetNodeFromCoordinates, ref onValidate), new LevelManager(gameGrid, breadPrefab, ingridientPrefab, ingredientAmountRange, ingredientSize, ref onGetIngridientAmount), new RulesManager(ref onValidate, ref onGetIngridientAmount, winPannel) };
         invoker = new();
         LevelGeneration();
     }
 
+
     private void OnEnable()
     {
-        foreach(var manager in managers)
+        foreach (var manager in managers)
         {
             manager.OnEnableFunction();
         }
@@ -39,7 +50,6 @@ public class GameManager : HomoBehaviour
         }
     }
 
-
     public void LevelGeneration()
     {
         foreach (var manager in managers)
@@ -48,9 +58,16 @@ public class GameManager : HomoBehaviour
         }
     }
 
-    private Node GetNodeFromCoordinates(Vector2Int coordinates) => gameGrid.NodeGrid[coordinates.x, coordinates.y];
+    private Node GetNodeFromCoordinates(Vector2Int coordinates)
+    {
+        if (coordinates.x >= 4 || coordinates.x < 0 || coordinates.y >= 4 || coordinates.y < 0)
+            return null;
 
-    private void ExecuteCommand(ICommand command) => invoker.ExecuteCommand(command);
+        return gameGrid.NodeGrid[coordinates.x, coordinates.y];
+    }
+
+
+
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()

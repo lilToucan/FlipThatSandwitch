@@ -4,29 +4,31 @@ using UnityEngine.InputSystem.EnhancedTouch;
 using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
 
 
-public class GameplayManager : IManager
+public delegate Node GetNode(Vector2Int _coordinates);
+public delegate void ExecuteComand(ICommand _command);
+
+public class InputManager : IManager
 {
     private Camera mainCam;
-
+    private bool isMovingDone = true;
     private Ingredient ingredientHit;
 
-    public delegate Node GetNode(Vector2Int coordinates);
-    public GetNode OnGetNodeRequest;
 
-    public delegate void ExecuteComand(ICommand command);
-    public ExecuteComand OnExecuteCommandRequest;
-    bool isMovingDone = true;
+    private GetNode onGetNodeRequest;
+    private ExecuteComand onExecuteCommandRequest;
+    private ValidateMove onValidateMove;
 
-    public GameplayManager(ExecuteComand _executeCommand, GetNode _getNode)
+
+
+    public InputManager(ExecuteComand _executeCommand, GetNode _getNode,ref ValidateMove _onValidateMove)
     {
-        OnExecuteCommandRequest += _executeCommand;
-        OnGetNodeRequest += _getNode;
-    }
-
-    public void AwakeFunction()
-    {
+        onExecuteCommandRequest += _executeCommand;
+        onGetNodeRequest += _getNode;
+        onValidateMove = _onValidateMove;
         mainCam = Camera.main;
     }
+
+    public void AwakeFunction() { }
 
     public void OnEnableFunction()
     {
@@ -41,23 +43,23 @@ public class GameplayManager : IManager
 
     public void OnDisableFunction()
     {
+        onExecuteCommandRequest -= onExecuteCommandRequest;
+        onGetNodeRequest -= onGetNodeRequest;
+        onValidateMove -= onValidateMove;
+
         EnhancedTouch.Touch.onFingerDown -= OnTouch;
         EnhancedTouch.Touch.onFingerMove -= OnTouchMove;
         EnhancedTouch.Touch.onFingerUp -= OnTouchRelese;
-        OnExecuteCommandRequest -= OnExecuteCommandRequest;
-        OnGetNodeRequest -= OnGetNodeRequest;
-
-
 
         EnhancedTouch.TouchSimulation.Disable();
         EnhancedTouch.EnhancedTouchSupport.Disable();
     }
 
 
-    private void OnTouch(Finger finger)
+    private void OnTouch(Finger _finger)
     {
-        Debug.Log(finger.index);
-        Ray ray = mainCam.ScreenPointToRay(finger.screenPosition);
+        Debug.Log(_finger.index);
+        Ray ray = mainCam.ScreenPointToRay(_finger.screenPosition);
         Debug.DrawRay(ray.origin, ray.direction * 100, Color.red, 10f);
         Physics.Raycast(ray, out RaycastHit hit);
         if (hit.transform == null)
@@ -66,18 +68,18 @@ public class GameplayManager : IManager
         hit.transform.TryGetComponent(out ingredientHit);
     }
 
-    private void OnTouchMove(Finger finger)
+    private void OnTouchMove(Finger _finger)
     {
-        if (!isMovingDone ||ingredientHit == null )
+        if (!isMovingDone || ingredientHit == null)
             return;
 
-        Vector2 touchStartPos = finger.currentTouch.startScreenPosition;
-        Vector2 touchEndPos = finger.currentTouch.screenPosition;
+        Vector2 touchStartPos = _finger.currentTouch.startScreenPosition;
+        Vector2 touchEndPos = _finger.currentTouch.screenPosition;
 
         if (Vector2.Distance(touchStartPos, touchEndPos) < 30f)
             return;
 
-        Vector2 touchDirection = (touchEndPos- touchStartPos).normalized;
+        Vector2 touchDirection = (touchEndPos - touchStartPos).normalized;
         Vector2 dirNorm = touchDirection;
 
         // checks if the direction is diagonal 
@@ -86,7 +88,7 @@ public class GameplayManager : IManager
 
         isMovingDone = false;
 
-        Node oldNode = OnGetNodeRequest?.Invoke(ingredientHit.Coordinates);
+        Node oldNode = onGetNodeRequest?.Invoke(ingredientHit.Coordinates);
 
         if (Mathf.Abs(touchDirection.x) > Mathf.Abs(touchDirection.y))
         {
@@ -100,19 +102,22 @@ public class GameplayManager : IManager
         dirNorm = dirNorm.normalized;
         float dot = Vector2.Dot(dirNorm, touchDirection);
 
-        if (dot < 0.7f ) // the dot needs to be > 70 
+        if (dot < 0.7f) // the dot needs to be > 70 
             return;
 
         Vector2Int dir = new(oldNode.Coordinates.x + (int)dirNorm.x, oldNode.Coordinates.y + (int)dirNorm.y);
         Debug.Log(dir);
-        Node newNode = OnGetNodeRequest?.Invoke(dir);
+        Node newNode = onGetNodeRequest?.Invoke(dir);
+
+        if (newNode == null || !onValidateMove.Invoke(oldNode, newNode))
+            return;
 
         FlipStackCommand flip = new(oldNode, newNode, 0.3f);
-        OnExecuteCommandRequest?.Invoke(flip);
+        onExecuteCommandRequest?.Invoke(flip);
 
     }
 
-    private void OnTouchRelese(Finger finger)
+    private void OnTouchRelese(Finger _finger)
     {
         isMovingDone = true;
         ingredientHit = null;

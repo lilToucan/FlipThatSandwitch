@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 public class LevelManager : IManager
 {
@@ -19,25 +22,26 @@ public class LevelManager : IManager
 
     private Grid grid;
     private Transform transform;
+    private Action<int> onIngridientAmountGenerated;
 
-
-    public LevelManager(Grid _grid, Ingredient _breadPrefab, Ingredient _ingridientPrefab, Vector2Int _ingredientAmountRange, float _ingredientSize)
+    public LevelManager(Grid _grid, Ingredient _breadPrefab, Ingredient _ingridientPrefab, Vector2Int _ingredientAmountRange, float _ingredientSize, ref Action<int> _onIngridientAmountGenerated)
     {
         grid = _grid;
         breadPrefab = _breadPrefab;
         ingridientPrefab = _ingridientPrefab;
         ingredientAmountRange = _ingredientAmountRange;
         ingredientSize = _ingredientSize;
-    }
-    public void GenerateLevel()
-    {
-        GenerateBread();
-        GenerateIngridients();
+        onIngridientAmountGenerated = _onIngridientAmountGenerated;
     }
 
     public void AwakeFunction()
     {
         GenerateLevel();
+    }
+    private void GenerateLevel()
+    {
+        GenerateBread();
+        GenerateIngridients();
     }
 
     public void OnEnableFunction() { }
@@ -102,8 +106,8 @@ public class LevelManager : IManager
         // spawn second bread
         List<Node> adjacentNodes = CheckValidAdjacentNodes(lastNode);
 
-        lastNode.isBread = true;
         lastNode = adjacentNodes[Random.Range(0, adjacentNodes.Count)];
+        lastNode.isBread = true;
         lastIngridient = Object.Instantiate(breadPrefab, lastNode.Position, Quaternion.identity);
         lastIngridient.Coordinates = lastNode.Coordinates;
 
@@ -117,6 +121,7 @@ public class LevelManager : IManager
         List<Node> adjacentNodes = new();
         spawnedIngredientNodes.Clear();
         int amount = Random.Range(ingredientAmountRange.x, ingredientAmountRange.y);
+        onIngridientAmountGenerated?.Invoke(amount);
         Ingredient lastIngridient;
 
         for (int i = 0; i < amount; i++)
@@ -147,12 +152,4 @@ public class LevelManager : IManager
             lastIngridient.name = $"ingridient_{i + 1}";
         }
     }
-
-    public Node GetNodeFormCoordinates(Vector2Int coordinates)
-    {
-        return grid.NodeGrid[coordinates.x, coordinates.y];
-    }
-
-
-
 }
