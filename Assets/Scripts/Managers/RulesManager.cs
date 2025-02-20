@@ -1,20 +1,19 @@
 using System;
 using Unity.VisualScripting;
 using UnityEngine;
-
-public delegate bool ValidateMove(Node _oldNode, Node _newNode);
 public class RulesManager : IManager
 {
     int ingridientAmount;
     GameObject winPannel;
+    public Action<Node> onWin;
 
-    public RulesManager(ref ValidateMove _validateMove, ref Action<int> _onGetIngridientAmount, GameObject _winPannel )
+    public RulesManager( GameObject _winPannel)
     {
-        _validateMove += CheckValidMove;
-        _onGetIngridientAmount += GetIngridientAmount;
+        winPannel = _winPannel;
+        
     }
 
-    private bool CheckValidMove(Node _oldNode, Node _newNode)
+    public bool CheckValidMove(Node _oldNode, Node _newNode)
     {
         if (_oldNode.isBread && !_newNode.isBread)
             return false;
@@ -27,11 +26,12 @@ public class RulesManager : IManager
         else if(_newNode.isBread && _oldNode.isBread)
         {
             winPannel.SetActive(true);
+            onWin?.Invoke(_newNode);
         }
 
         return true;
     }
-    private void GetIngridientAmount(int _amount)
+    public void GetIngridientAmount(int _amount)
     {
         ingridientAmount = _amount + 2;
     }

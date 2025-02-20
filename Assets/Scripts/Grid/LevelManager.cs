@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
-
 public class LevelManager : IManager
 {
     private Ingredient breadPrefab;
     private Ingredient ingridientPrefab;
 
     private Vector2Int ingredientAmountRange;
-
-    private float ingredientSize = 1.5f;
 
     private Vector2Int[] directions = new Vector2Int[4] { new(0, 1), new(0, -1), new(1, 0), new(-1, 0) };
 
@@ -22,17 +19,37 @@ public class LevelManager : IManager
 
     private Grid grid;
     private Transform transform;
-    private Action<int> onIngridientAmountGenerated;
+    public Action<int> OnIngridientAmountGenerated;
 
-    public LevelManager(Grid _grid, Ingredient _breadPrefab, Ingredient _ingridientPrefab, Vector2Int _ingredientAmountRange, float _ingredientSize, ref Action<int> _onIngridientAmountGenerated)
+    private IngredientList ingridientsToDelete;
+
+    public LevelManager(Grid _grid, Ingredient _breadPrefab, Ingredient _ingridientPrefab, Vector2Int _ingredientAmountRange)
     {
         grid = _grid;
         breadPrefab = _breadPrefab;
         ingridientPrefab = _ingridientPrefab;
         ingredientAmountRange = _ingredientAmountRange;
-        ingredientSize = _ingredientSize;
-        onIngridientAmountGenerated = _onIngridientAmountGenerated;
     }
+
+    public void GetStack(Node _endNode)
+    {
+        ingridientsToDelete = _endNode.IngridientStack;
+    }
+
+    public void DestroyLevel()
+    {
+        while (ingridientsToDelete.Count != 0)
+        {
+            Ingredient ing = ingridientsToDelete.Pop();
+            Object.Destroy(ing.gameObject);
+        }
+    }
+
+    //while (_endNode.IngridientStack.Count > 0)
+    //    {
+    //        Ingredient ing = _endNode.IngridientStack.Pop();
+    //Object.Destroy(ing.gameObject);
+    //    }
 
     public void AwakeFunction()
     {
@@ -121,7 +138,7 @@ public class LevelManager : IManager
         List<Node> adjacentNodes = new();
         spawnedIngredientNodes.Clear();
         int amount = Random.Range(ingredientAmountRange.x, ingredientAmountRange.y);
-        onIngridientAmountGenerated?.Invoke(amount);
+        OnIngridientAmountGenerated?.Invoke(amount);
         Ingredient lastIngridient;
 
         for (int i = 0; i < amount; i++)

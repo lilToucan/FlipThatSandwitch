@@ -2,33 +2,26 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
-
-
-public delegate Node GetNode(Vector2Int _coordinates);
-public delegate void ExecuteComand(ICommand _command);
-
 public class InputManager : IManager
 {
     private Camera mainCam;
     private bool isMovingDone = true;
     private Ingredient ingredientHit;
 
-
     private GetNode onGetNodeRequest;
     private ExecuteComand onExecuteCommandRequest;
-    private ValidateMove onValidateMove;
+    private bool isLevelDone = false;
+    public ValidateMove onValidateMove;
+    public Action OnDeleteLevel;
 
-
-
-    public InputManager(ExecuteComand _executeCommand, GetNode _getNode, ref ValidateMove _onValidateMove)
+    public InputManager(ExecuteComand _executeCommand, GetNode _getNode)
     {
         onExecuteCommandRequest += _executeCommand;
         onGetNodeRequest += _getNode;
-        onValidateMove = _onValidateMove;
         mainCam = Camera.main;
     }
 
-    public void AwakeFunction() { }
+    public void AwakeFunction() { isLevelDone = false; }
 
     public void OnEnableFunction()
     {
@@ -58,7 +51,6 @@ public class InputManager : IManager
 
     private void OnTouch(Finger _finger)
     {
-        Debug.Log(_finger.index);
         Ray ray = mainCam.ScreenPointToRay(_finger.screenPosition);
         Debug.DrawRay(ray.origin, ray.direction * 100, Color.red, 10f);
         Physics.Raycast(ray, out RaycastHit hit);
@@ -75,9 +67,6 @@ public class InputManager : IManager
 
         Vector2 touchStartPos = _finger.currentTouch.startScreenPosition;
         Vector2 touchEndPos = _finger.currentTouch.screenPosition;
-
-        if (Vector2.Distance(touchStartPos, touchEndPos) < 30f)
-            return;
 
         Vector2 touchDirection = (touchEndPos - touchStartPos).normalized;
         Vector2 dirNorm = touchDirection;
@@ -106,7 +95,6 @@ public class InputManager : IManager
             return;
 
         Vector2Int dir = new(oldNode.Coordinates.x + (int)dirNorm.x, oldNode.Coordinates.y + (int)dirNorm.y);
-        Debug.Log(dir);
         Node newNode = onGetNodeRequest?.Invoke(dir);
 
         if (newNode == null)
@@ -117,7 +105,15 @@ public class InputManager : IManager
         FlipStackCommand flip = new(oldNode, newNode, 0.3f);
         onExecuteCommandRequest?.Invoke(flip);
 
+        if (isLevelDone)
+            OnDeleteLevel?.Invoke();
+
     }
+
+    public void Won(Node _)
+    {
+        isLevelDone = true;
+    } 
 
     private void OnTouchRelese(Finger _finger)
     {
