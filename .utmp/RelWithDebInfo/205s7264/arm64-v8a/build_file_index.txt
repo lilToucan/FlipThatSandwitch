@@ -1,0 +1,2 @@
+C:\Users\alexy\Documents\PicosProjects\FlipThatSandwitch\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Users\alexy\Documents\PicosProjects\FlipThatSandwitch\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
